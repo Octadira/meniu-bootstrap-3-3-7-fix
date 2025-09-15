@@ -1,48 +1,66 @@
-$(document).ready(function() {
-    var menu = $('#secondary-menu');
-    var menuOffsetTop = menu.offset().top;
-    var isFixed = false;
+  $(document).ready(function() {
+    var $menu = $('#secondary-menu');
+    var $parentCol = $menu.parent();
+    var menuOriginalTop = $menu.offset().top;
 
-    function checkMenuPosition() {
-      // Daca fereastra este mai mare de 768px (ecran de desktop)
-      if ($(window).width() > 768) {
-        if ($(window).scrollTop() >= menuOffsetTop && !isFixed) {
-          menu.css({
-            'position': 'fixed',
-            'top': '90px', // Ajustează valoarea pentru a poziționa meniul sub meniul principal
-            'width': menu.parent().width() + 'px', // Setează lățimea egală cu a părintelui (coloana)
-            'z-index': '900' // Asigură că meniul este deasupra altor elemente
+    function handleStickyMenu() {
+      var windowTop = $(window).scrollTop();
+      var windowHeight = $(window).height();
+      var windowWidth = $(window).width();
+      var menuHeight = $menu.outerHeight();
+      
+      var topOffset = 90; // Inaltimea meniului principal fixat
+
+      // Dezactivează comportamentul sticky pentru ecranele mici
+      if (windowWidth < 768) {
+        $menu.css({
+          'position': 'relative',
+          'top': '0',
+          'height': 'auto',
+          'overflow-y': 'visible'
+        });
+        return;
+      }
+
+      if (windowTop > menuOriginalTop) {
+        // Meniul devine fix
+        $menu.css({
+          'position': 'fixed',
+          'top': topOffset + 'px',
+          'width': $parentCol.width() + 'px',
+          'z-index': '900'
+        });
+
+        // Verificam daca inaltimea meniului depaseste spatiul disponibil
+        var availableHeight = windowHeight - topOffset - 20; // 20px pentru un spatiu de jos
+        if (menuHeight > availableHeight) {
+          $menu.css({
+            'height': availableHeight + 'px',
+            'overflow-y': 'scroll' // Adauga bara de derulare interna
           });
-          isFixed = true;
-        } else if ($(window).scrollTop() < menuOffsetTop && isFixed) {
-          menu.css({
-            'position': 'relative',
-            'top': '0',
-            'width': 'auto'
+        } else {
+          $menu.css({
+            'height': 'auto',
+            'overflow-y': 'visible'
           });
-          isFixed = false;
         }
       } else {
-        // Pentru ecrane mobile, dezactivează funcția sticky
-        menu.css({
-            'position': 'relative',
-            'top': '0',
-            'width': 'auto'
+        // Meniul revine la pozitia normala
+        $menu.css({
+          'position': 'relative',
+          'top': '0',
+          'width': 'auto',
+          'height': 'auto',
+          'overflow-y': 'visible'
         });
       }
     }
 
-    // Rulează funcția la derulare și la încărcarea paginii
-    $(window).scroll(function() {
-      checkMenuPosition();
+    $(window).on('scroll resize', function() {
+      // Recalculam pozitia la redimensionare
+      menuOriginalTop = $parentCol.offset().top;
+      handleStickyMenu();
     });
 
-    $(window).resize(function() {
-      // Recalculează poziția la redimensionarea ferestrei
-      menuOffsetTop = menu.offset().top;
-      checkMenuPosition();
-    });
-
-    // Rulează funcția o dată, la încărcarea paginii
-    checkMenuPosition();
+    handleStickyMenu();
   });
